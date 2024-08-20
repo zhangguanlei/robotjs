@@ -266,12 +266,6 @@ void doubleClick(MMMouseButton button)
 
 void scrollMouse(int x, int y)
 {
-#if defined(IS_WINDOWS)
-	// Fix for #97 https://github.com/octalmage/robotjs/issues/97,
-	// C89 needs variables declared on top of functions (mouseScrollInput)
-	INPUT mouseScrollInputs[2];
-#endif
-
   /* Direction should only be considered based on the scrollDirection. This
    * Should not interfere. */
 
@@ -324,26 +318,18 @@ void scrollMouse(int x, int y)
 	XSync(display, false);
 
 #elif defined(IS_WINDOWS)
+    // Fix for #764 https://github.com/octalmage/robotjs/issues/764
+    INPUT scrollMouseY = {};
+    scrollMouseY.type = INPUT_MOUSE;
+    scrollMouseY.mi.dwFlags = MOUSEEVENTF_WHEEL;
+    scrollMouseY.mi.mouseData = y;
+    SendInput(1, &amp;scrollMouseY, sizeof(scrollMouseY));
 
-	// Must send y first, otherwise we get stuck when scrolling on y axis
-	mouseScrollInputs[0].type = INPUT_MOUSE;
-	mouseScrollInputs[0].mi.dx = 0;
-	mouseScrollInputs[0].mi.dy = 0;
-	mouseScrollInputs[0].mi.dwFlags = MOUSEEVENTF_WHEEL;
-	mouseScrollInputs[0].mi.time = 0;
-	mouseScrollInputs[0].mi.dwExtraInfo = 0;
-	mouseScrollInputs[0].mi.mouseData = y;
-
-	mouseScrollInputs[1].type = INPUT_MOUSE;
-	mouseScrollInputs[1].mi.dx = 0;
-	mouseScrollInputs[1].mi.dy = 0;
-	mouseScrollInputs[1].mi.dwFlags = MOUSEEVENTF_HWHEEL;
-	mouseScrollInputs[1].mi.time = 0;
-	mouseScrollInputs[1].mi.dwExtraInfo = 0;
-	// Flip x to match other platforms.
-	mouseScrollInputs[1].mi.mouseData = -x;
-
-	SendInput(2, mouseScrollInputs, sizeof(INPUT));
+    INPUT scrollMouseX = {};
+    scrollMouseX.type = INPUT_MOUSE;
+    scrollMouseX.mi.dwFlags = MOUSEEVENTF_HWHEEL;
+    scrollMouseX.mi.mouseData = x;
+    SendInput(1, &amp;scrollMouseX, sizeof(scrollMouseX));
 #endif
 }
 
